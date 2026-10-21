@@ -10,8 +10,34 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="style.css">
-  <script src="https://cdn.jsdelivr.net/npm/qrcode@1.5.4/build/qrcode.min.js"></script>
-  <script src="script.js" defer></script>
+  <script>
+    // Tenta duas CDNs para reduzir falhas de carregamento da biblioteca.
+    (function () {
+      const sources = [
+        "https://cdn.jsdelivr.net/npm/qrcode@1.5.4/build/qrcode.min.js"a,
+        "https://unpkg.com/qrcode@1.5.4/build/qrcode.min.js"
+      ];
+      function loadLibrary(index) {
+        if (index >= sources.length) {
+          const error = document.createElement("p");
+          error.textContent = "Não foi possível carregar a biblioteca de QR Code. Verifique se a rede ou o navegador bloqueia jsDelivr e unpkg e recarregue a página.";
+          error.style.cssText = "margin:16px auto;padding:12px 16px;max-width:700px;color:#9f1239;background:#fff1f2;border-radius:10px;font:14px sans-serif;text-align:center";
+          document.body.prepend(error);
+          return;
+        }
+        const script = document.createElement("script");
+        script.src = sources[index];
+        script.onload = function () {
+          const app = document.createElement("script");
+          app.src = "script.js";
+          document.body.appendChild(app);
+        };
+        script.onerror = function () { loadLibrary(index + 1); };
+        document.head.appendChild(script);
+      }
+      loadLibrary(0);
+    })();
+  </script>
 </head>
 <body>
   <header class="topbar">
