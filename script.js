@@ -123,21 +123,35 @@
   }
 
   async function renderQr(payload) {
-    if (!window.QRCode || typeof QRCode.toCanvas !== "function") {
-      throw new Error("Não foi possível carregar a biblioteca de QR Code. Confira sua conexão e recarregue a página.");
+    if (!window.QRCodeLocal || !window.QRErrorCorrectLevelLocal) {
+      throw new Error("A biblioteca local de QR Code não foi encontrada. Confirme se qrcode-standalone.js está na mesma pasta do index.html no GitHub.");
     }
     const size = Number($("#qr-size").value);
     const foreground = $("#foreground").value;
     const background = $("#background").value;
+    const qr = new window.QRCodeLocal(-1, logoImage ? window.QRErrorCorrectLevelLocal.H : window.QRErrorCorrectLevelLocal.Q);
+    qr.addData(payload);
+    qr.make();
+    const count = qr.getModuleCount();
+    const margin = 4;
+    const cell = size / (count + margin * 2);
     canvas.width = size;
     canvas.height = size;
-    await QRCode.toCanvas(canvas, payload, {
-      width: size,
-      margin: 3,
-      errorCorrectionLevel: logoImage ? "H" : "Q",
-      color: { dark: foreground, light: background }
-    });
     const ctx = canvas.getContext("2d");
+    ctx.fillStyle = background;
+    ctx.fillRect(0, 0, size, size);
+    ctx.fillStyle = foreground;
+    for (let row = 0; row < count; row++) {
+      for (let col = 0; col < count; col++) {
+        if (qr.isDark(row, col)) {
+          const x = Math.round((col + margin) * cell);
+          const y = Math.round((row + margin) * cell);
+          const right = Math.round((col + margin + 1) * cell);
+          const bottom = Math.round((row + margin + 1) * cell);
+          ctx.fillRect(x, y, right - x, bottom - y);
+        }
+      }
+    }
     drawLogo(ctx, size);
     canvas.hidden = false;
     emptyState.hidden = true;
